@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>¡Felicidades por graduarte!</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ffd166;--muted:#a7b0c2}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{background:linear-gradient(180deg,#071126 0%, #081428 50%, #0b2030 100%);display:flex;align-items:center;justify-content:center;color:white}
+    .card{width:92vw;max-width:880px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:16px;padding:36px;box-shadow:0 10px 30px rgba(2,6,23,0.6);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+    .header{display:flex;align-items:center;gap:18px}
+    .hat{width:84px;height:84px;border-radius:12px;background:linear-gradient(135deg,#0ea5a4,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:32px;color:#05202a;box-shadow:0 6px 18px rgba(6,30,43,0.6)}
+    h1{margin:0;font-size:28px;line-height:1.05}
+    p{margin:8px 0 0;color:var(--muted)}
+    .message{margin-top:24px;font-size:20px;min-height:72px}
+    .typed{display:inline-block;white-space:pre-wrap}
+    .accent{color:var(--accent);font-weight:700}
+    .buttons{margin-top:22px;display:flex;gap:12px}
+    .btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn:active{transform:translateY(1px)}
+
+    /* confetti canvas covers the card */
+    #confetti{position:absolute;inset:0;pointer-events:none}
+
+    /* small wavy animation for the last phrase */
+    .sad{display:inline-block;transform-origin:50% 50%;animation:wave 1.2s ease-in-out 0s 1}
+    @keyframes wave{0%{transform:translateY(0)}25%{transform:translateY(-6px)}50%{transform:translateY(0)}75%{transform:translateY(-3px)}100%{transform:translateY(0)} }
+
+    /* responsive */
+    @media (max-width:520px){.header{gap:12px}.hat{width:64px;height:64px;font-size:24px}.card{padding:20px}.message{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-live="polite">
+    <canvas id="confetti"></canvas>
+    <div class="header">
+      <div class="hat">🎓</div>
+      <div>
+        <h1>¡Felicidades por tu graduación!</h1>
+        <p>Un pequeño mensaje animado para la ocasión.</p>
+      </div>
+    </div>
+
+    <div class="message" aria-hidden="false">
+      <span class="typed" id="typed"></span>
+    </div>
+
+    <div class="buttons">
+      <button class="btn" id="replay">Volver a reproducir</button>
+      <button class="btn" id="download">Descargar como PNG</button>
+    </div>
+  </div>
+
+  <script>
+    // Texto dividido en partes para controlar la animación y el énfasis
+    const parts = [
+      'Felicidades por graduarte,',
+      ' lamento que no serás un ingeniero'
+    ];
+
+    const typedEl = document.getElementById('typed');
+    const replay = document.getElementById('replay');
+    const download = document.getElementById('download');
+
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    async function typeOnce(){
+      typedEl.innerHTML = '';
+      // primera parte: celebración
+      await typeText(parts[0], {speed:40, wrap:false});
+      await sleep(400);
+      // breve pausa y estilo
+      const span = document.createElement('span');
+      span.textContent = parts[1];
+      span.className = 'sad accent';
+      typedEl.appendChild(span);
+      // play confetti
+      startConfetti();
+    }
+
+    async function typeText(text, {speed=50, wrap=true} = {}){
+      for(let i=0;i<text.length;i++){
+        typedEl.textContent += text[i];
+        await sleep(speed + Math.random()*20);
+      }
+    }
+
+    replay.addEventListener('click', ()=>{
+      stopConfetti();
+      typeOnce();
+    });
+
+    // Download the card as PNG (simple approach using html2canvas style with SVG fallback)
+    download.addEventListener('click', async ()=>{
+      const card = document.querySelector('.card');
+      const rect = card.getBoundingClientRect();
+      // create a temporary SVG with a foreignObject
+      const svg = `<?xml version="1.0" encoding="utf-8"?>
+        <svg xmlns='http://www.w3.org/2000/svg' width='${rect.width}' height='${rect.height}'>
+          <foreignObject width='100%' height='100%'>
+            ${new XMLSerializer().serializeToString(card.cloneNode(true))}
+          </foreignObject>
+        </svg>`;
+      const svgBlob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = ()=>{
+        const c = document.createElement('canvas');
+        c.width = rect.width * devicePixelRatio;
+        c.height = rect.height * devicePixelRatio;
+        const ctx = c.getContext('2d');
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+        ctx.fillStyle = getComputedStyle(document.body).background;
+        ctx.fillRect(0,0,rect.width,rect.height);
+        ctx.drawImage(img,0,0);
+        const a = document.createElement('a');
+        a.download = 'felicidades.png';
+        a.href = c.toDataURL('image/png');
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    });
+
+    // --- Confetti simple implementation ---
+    const confCanvas = document.getElementById('confetti');
+    const ctx = confCanvas.getContext('2d');
+    let confettiPieces = [];
+    let confettiRunning = false;
+
+    function fitCanvas(){
+      const card = document.querySelector('.card');
+      const r = card.getBoundingClientRect();
+      confCanvas.width = Math.max(r.width,1);
+      confCanvas.height = Math.max(r.height,1);
+      confCanvas.style.width = r.width+'px';
+      confCanvas.style.height = r.height+'px';
+      confCanvas.style.left = '0';
+      confCanvas.style.top = '0';
+    }
+
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function random(min,max){return Math.random()*(max-min)+min}
+
+    function startConfetti(){
+      confettiPieces = [];
+      const count = 40;
+      for(let i=0;i<count;i++){
+        confettiPieces.push({
+          x: random(0,confCanvas.width),
+          y: random(-confCanvas.height,0),
+          w: random(6,12),
+          h: random(8,18),
+          vx: random(-0.8,0.8),
+          vy: random(1,3),
+          rot: random(0,360),
+          vr: random(-6,6),
+          color: `hsl(${Math.floor(random(0,360))},90%,60%)`
+        });
+      }
+      if(!confettiRunning){
+        confettiRunning = true;
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function stopConfetti(){ confettiRunning = false }
+
+    function loop(){
+      if(!confettiRunning) return;
+      ctx.clearRect(0,0,confCanvas.width,confCanvas.height);
+      for(let p of confettiPieces){
+        p.x += p.vx*2;
+        p.y += p.vy;
+        p.vy += 0.03; // gravity
+        p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        ctx.restore();
+      }
+      // remove pieces that have fallen
+      confettiPieces = confettiPieces.filter(p=>p.y < confCanvas.height + 50);
+      if(confettiPieces.length === 0){ confettiRunning = false; return }
+      requestAnimationFrame(loop);
+    }
+
+    // inicia al cargar
+    window.addEventListener('load', ()=>{
+      typeOnce();
+      // stop confetti after 4s automatically
+      setTimeout(()=>{ stopConfetti() }, 4200);
+    });
+
+  </script>
+</body>
+</html>
