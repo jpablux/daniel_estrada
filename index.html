@@ -182,8 +182,8 @@
     function fitCanvas(){
       const card = document.querySelector('.card');
       const r = card.getBoundingClientRect();
-      confCanvas.width = Math.max(r.width,1);
-      confCanvas.height = Math.max(r.height,1);
+      confCanvas.width = window.innerWidth;
+      confCanvas.height = window.innerHeight;
       confCanvas.style.width = r.width+'px';
       confCanvas.style.height = r.height+'px';
       confCanvas.style.left = '0';
