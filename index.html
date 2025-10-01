@@ -19,6 +19,19 @@
     .buttons{margin-top:22px;display:flex;gap:12px}
     .btn{background:#000000;border:1px solid; #ffffff;color:white;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
     .btn:active{transform:translateY(1px)}
+    .img {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px; /* separación de la cabecera */
+  }
+
+  .img img {
+    width: 300px;
+    height: 300px;
+    object-fit: contain; /* mantiene proporciones sin deformar */
+    border-radius: 12px; /* opcional, para que se vea con esquinas redondeadas */
+  }
+    
 
     /* confetti canvas covers the card */
     #confetti{position:absolute;inset:0;pointer-events:none}
