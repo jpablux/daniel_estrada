@@ -25,6 +25,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.04);
+  z-index: 1; /* encima del confetti */
 
   display: flex;
   flex-direction: column;
@@ -62,13 +63,14 @@
     
 
     /* confetti canvas covers the card */
-  #confetti {
-  position: absolute;
+ #confetti {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100% !important;
-  height: 100% !important;
+  width: 100vw !important;
+  height: 100vh !important;
   pointer-events: none;
+  z-index: 0; /* al fondo */
 }
 
     /* small wavy animation for the last phrase */
@@ -80,8 +82,8 @@
   </style>
 </head>
 <body>
+   <canvas id="confetti"></canvas>
   <div class="card" role="main" aria-live="polite">
-    <canvas id="confetti"></canvas>
     <div class ="img"><img alt="dani-sticker-epico" src="dani_sticker.webp"/></div>
     <div class="header">
       <div class="hat">🎓</div>
